@@ -120,17 +120,15 @@ export default class SipProvider extends React.Component {
       });
     } catch (error) {
       logger.debug('Error', error.message, error);
-      this.onMount(function callback() {
-        this.setState({
-          status: SIP_STATUS_ERROR,
-          errorLog: [
-            ...this.state.errorLog,
-            {
-              message: error.message,
-              time: new Date(),
-            },
-          ],
-        });
+      this.setState({
+        status: SIP_STATUS_ERROR,
+        errorLog: [
+          ...this.state.errorLog,
+          {
+            message: error.message,
+            time: new Date(),
+          },
+        ],
       });
     }
 
