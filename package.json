@@ -4,8 +4,8 @@
   "description": "React wrapper for jssip",
   "main": "./dist/index.js",
   "scripts": {
-    "build": "tsc --project .",
-    "build:watch": "tsc --project . --watch",
+    "build": "rimraf dist && tsc --project .",
+    "build:watch": "rimraf dist && tsc --project . --watch",
     "format": "prettier --write --ignore-path .gitignore \"{.,src/**}/{*.js,*.ts,*.md,*.json}\"",
     "lint": "tsc --project . --noEmit && tslint --project . && prettier-check --ignore-path .gitignore \"{.,src/**}/{*.js,*.ts,*.md,*.json}\"",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -38,6 +38,7 @@
     "prettier": "^1.13.7",
     "prettier-check": "^2.0.0",
     "react": "^16.4.1",
+    "rimraf": "^2.6.2",
     "tslint": "^5.11.0",
     "tslint-config-prettier": "^1.14.0",
     "typescript": "^2.8.4"

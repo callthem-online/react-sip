@@ -10,7 +10,10 @@
     "allowSyntheticDefaultImports": false,
     "pretty": true,
     "removeComments": true,
-    "lib": ["es6", "esnext.asynciterable", "dom"]
+    "lib": ["es6", "esnext.asynciterable", "dom"],
+
+    "outDir": "dist",
+    "rootDir": "src"
   },
-  "exclude": ["build/**/*", "node_modules"]
+  "include": ["src"]
 }
