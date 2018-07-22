@@ -1,6 +1,6 @@
 import JsSIP from "jssip";
 // import { bool, func, node, number, string } from "prop-types";
-import PropTypes from "prop-types";
+import * as PropTypes from "prop-types";
 import * as React from "react";
 import dummyLogger from "../../lib/dummyLogger";
 import {
