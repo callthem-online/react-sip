@@ -120,6 +120,9 @@ To make calls, simply use these functions:
 The value for `destination` argument equals to the target SIP user without the host part (e.g. `+441234567890` or `bob`).
 The omitted host part is equal to host you’ve defined in `SipProvider` props (e.g. `sip.example.com`).
 
+You may also mute your microphone during calls with the `call.toggleMuteMicrophone()`, `call.muteMicrophone` and `call.unmuteMicrophone` methods.  
+You can check whether the microphone is used with the `call.microphoneIsMuted` property.
+
 ---
 
 The values for `sip.status`, `sip.errorType`, `call.status` and `call.direction` can be imported as constants to make typos easier to detect:

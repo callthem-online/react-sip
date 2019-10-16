@@ -62,4 +62,8 @@ export const callPropType = PropTypes.shape({
   status: PropTypes.string,
   direction: PropTypes.string,
   counterpart: PropTypes.string,
+  microphoneIsMuted: PropTypes.bool,
+  muteMicrophone: PropTypes.func,
+  unmuteMicrophone: PropTypes.func,
+  toggleMuteMicrophone: PropTypes.func,
 });
