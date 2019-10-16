@@ -61,6 +61,7 @@ Child components get access to this context:
   answerCall: PropTypes.func,
   startCall: PropTypes.func,
   stopCall: PropTypes.func,
+  sendDTMF: PropTypes.func,
 }
 ```
 
@@ -119,6 +120,15 @@ To make calls, simply use these functions:
 
 The value for `destination` argument equals to the target SIP user without the host part (e.g. `+441234567890` or `bob`).
 The omitted host part is equal to host you’ve defined in `SipProvider` props (e.g. `sip.example.com`).
+
+To send DTMF tones while in-call, you can use this function:
+
+`sendDTMF(tones)`
+
+You can pass as many tones as you want in a `string` (e.g. `sendDTMF("1234")`).  
+You may also specify `duration` and `interToneGap` in milliseconds, as `sendDTMF("1234", 100, 70)`. See [the MDN docs for `RTCDTMFSender.insertDTMF()`](https://developer.mozilla.org/en-US/docs/Web/API/RTCDTMFSender/insertDTMF) for further details.
+
+The DTMF implementation is **not** SIP INFO, but [RFC-4733](https://tools.ietf.org/html/rfc4733).
 
 ---
 

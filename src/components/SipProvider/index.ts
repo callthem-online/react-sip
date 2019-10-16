@@ -55,6 +55,7 @@ export default class SipProvider extends React.Component<
     callStatus: CallStatus;
     callDirection: CallDirection | null;
     callCounterpart: string | null;
+    dtmfSender: RTCDTMFSender | null;
     rtcSession;
   }
 > {
@@ -67,6 +68,7 @@ export default class SipProvider extends React.Component<
     answerCall: PropTypes.func,
     startCall: PropTypes.func,
     stopCall: PropTypes.func,
+    sendDTMF: PropTypes.func,
   };
 
   public static propTypes = {
@@ -119,6 +121,7 @@ export default class SipProvider extends React.Component<
       callStatus: CALL_STATUS_IDLE,
       callDirection: null,
       callCounterpart: null,
+      dtmfSender: null,
     };
 
     this.ua = null;
@@ -137,6 +140,7 @@ export default class SipProvider extends React.Component<
         status: this.state.callStatus,
         direction: this.state.callDirection,
         counterpart: this.state.callCounterpart,
+        dtmfSender: this.state.dtmfSender,
       },
       registerSip: this.registerSip,
       unregisterSip: this.unregisterSip,
@@ -144,6 +148,7 @@ export default class SipProvider extends React.Component<
       answerCall: this.answerCall,
       startCall: this.startCall,
       stopCall: this.stopCall,
+      sendDTMF: this.sendDTMF,
     };
   }
 
@@ -289,6 +294,20 @@ export default class SipProvider extends React.Component<
   public stopCall = () => {
     this.setState({ callStatus: CALL_STATUS_STOPPING });
     this.ua.terminateSessions();
+  };
+
+  public sendDTMF = (tones, duration = 100, interToneGap = 70) => {
+    if (
+      this.state.callStatus === "callStatus/ACTIVE" &&
+      this.state.dtmfSender
+    ) {
+      this.state.dtmfSender.insertDTMF(tones, duration, interToneGap);
+    } else {
+      this.logger.debug(
+        "Warning:",
+        "You are attempting to send DTMF, but there is no active call.",
+      );
+    }
   };
 
   public reconfigureDebug() {
@@ -471,6 +490,7 @@ export default class SipProvider extends React.Component<
             callStatus: CALL_STATUS_IDLE,
             callDirection: null,
             callCounterpart: null,
+            dtmfSender: null,
           });
         });
 
@@ -479,11 +499,17 @@ export default class SipProvider extends React.Component<
             return;
           }
 
+          // Close senders, as these keep the microphone open according to browsers (and that keeps Bluetooth headphones from exiting headset mode)
+          this.state.rtcSession.connection.getSenders().forEach((sender) => {
+            sender.track.stop();
+          });
+
           this.setState({
             rtcSession: null,
             callStatus: CALL_STATUS_IDLE,
             callDirection: null,
             callCounterpart: null,
+            dtmfSender: null,
           });
         });
 
@@ -495,6 +521,12 @@ export default class SipProvider extends React.Component<
           [
             this.remoteAudio.srcObject,
           ] = rtcSession.connection.getRemoteStreams();
+
+          // Set up DTMF
+          this.setState({
+            dtmfSender: rtcSession.connection.getSenders()[0].dtmf,
+          });
+
           // const played = this.remoteAudio.play();
           const played = this.remoteAudio.play();
 
@@ -508,6 +540,7 @@ export default class SipProvider extends React.Component<
                   this.remoteAudio.play();
                 }, 2000);
               });
+            // this.setState({ dtmfSender: rtcSession.connection.createDTMFSender(rtcSession.getAudioTracks()[0])});
             this.setState({ callStatus: CALL_STATUS_ACTIVE });
             return;
           }
