@@ -55,6 +55,7 @@ export default class SipProvider extends React.Component<
     callStatus: CallStatus;
     callDirection: CallDirection | null;
     callCounterpart: string | null;
+    callIsOnHold: boolean;
     rtcSession;
   }
 > {
@@ -96,7 +97,7 @@ export default class SipProvider extends React.Component<
     autoAnswer: false,
     iceRestart: false,
     sessionTimersExpires: 120,
-    extraHeaders: { register: [], invite: [] },
+    extraHeaders: { register: [], invite: [], hold: [] },
     iceServers: [],
     debug: false,
 
@@ -119,6 +120,7 @@ export default class SipProvider extends React.Component<
       callStatus: CALL_STATUS_IDLE,
       callDirection: null,
       callCounterpart: null,
+      callIsOnHold: false,
     };
 
     this.ua = null;
@@ -137,6 +139,10 @@ export default class SipProvider extends React.Component<
         status: this.state.callStatus,
         direction: this.state.callDirection,
         counterpart: this.state.callCounterpart,
+        isOnHold: this.state.callIsOnHold,
+        hold: this.callHold,
+        unhold: this.callUnhold,
+        toggleHold: this.callToggleHold,
       },
       registerSip: this.registerSip,
       unregisterSip: this.unregisterSip,
@@ -436,6 +442,7 @@ export default class SipProvider extends React.Component<
             callStatus: CALL_STATUS_STARTING,
             callCounterpart:
               foundUri.substring(0, delimiterPosition) || foundUri,
+            callIsOnHold: rtcSession.isOnHold().local,
           });
         } else if (originator === "remote") {
           const foundUri = rtcRequest.from.toString();
@@ -445,6 +452,7 @@ export default class SipProvider extends React.Component<
             callStatus: CALL_STATUS_STARTING,
             callCounterpart:
               foundUri.substring(0, delimiterPosition) || foundUri,
+            callIsOnHold: rtcSession.isOnHold().local,
           });
         }
 
@@ -484,6 +492,7 @@ export default class SipProvider extends React.Component<
             callStatus: CALL_STATUS_IDLE,
             callDirection: null,
             callCounterpart: null,
+            callIsOnHold: false,
           });
         });
 
@@ -546,4 +555,39 @@ export default class SipProvider extends React.Component<
   public render() {
     return this.props.children;
   }
+
+  private callHold = (useUpdate = false) => {
+    const holdStatus = this.state.rtcSession.isOnHold();
+    if (!holdStatus.local) {
+      const options = {
+        useUpdate,
+        extraHeaders: this.props.extraHeaders.hold,
+      };
+      const done = () => {
+        this.setState({ callIsOnHold: true });
+      };
+      this.state.rtcSession.hold(options, done);
+    }
+  };
+
+  private callUnhold = (useUpdate = false) => {
+    const holdStatus = this.state.rtcSession.isOnHold();
+    if (holdStatus.local) {
+      const options = {
+        useUpdate,
+        extraHeaders: this.props.extraHeaders.hold,
+      };
+      const done = () => {
+        this.setState({ callIsOnHold: false });
+      };
+      this.state.rtcSession.unhold(options, done);
+    }
+  };
+
+  private callToggleHold = (useUpdate = false) => {
+    const holdStatus = this.state.rtcSession.isOnHold();
+    return holdStatus.local
+      ? this.callUnhold(useUpdate)
+      : this.callHold(useUpdate);
+  };
 }

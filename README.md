@@ -120,6 +120,8 @@ To make calls, simply use these functions:
 The value for `destination` argument equals to the target SIP user without the host part (e.g. `+441234567890` or `bob`).
 The omitted host part is equal to host you’ve defined in `SipProvider` props (e.g. `sip.example.com`).
 
+During a call you can put it on hold using the `call.hold()` and `call.unhold()` functions. You can also get hold status with the `call.isOnHold` property.
+
 ---
 
 The values for `sip.status`, `sip.errorType`, `call.status` and `call.direction` can be imported as constants to make typos easier to detect:
