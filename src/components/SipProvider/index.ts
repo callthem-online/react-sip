@@ -47,6 +47,8 @@ export default class SipProvider extends React.Component<
     extraHeaders: ExtraHeaders;
     iceServers: IceServers;
     debug: boolean;
+    incomingAudioDeviceId: string;
+    outboundAudioDeviceId: string;
   },
   {
     sipStatus: SipStatus;
@@ -82,6 +84,8 @@ export default class SipProvider extends React.Component<
     extraHeaders: extraHeadersPropType,
     iceServers: iceServersPropType,
     debug: PropTypes.bool,
+    incomingAudioDeviceId: PropTypes.string,
+    outboundAudioDeviceId: PropTypes.string,
 
     children: PropTypes.node,
   };
@@ -99,6 +103,8 @@ export default class SipProvider extends React.Component<
     extraHeaders: { register: [], invite: [] },
     iceServers: [],
     debug: false,
+    incomingAudioDeviceId: "",
+    outboundAudioDeviceId: "",
 
     children: null,
   };
@@ -174,7 +180,9 @@ export default class SipProvider extends React.Component<
       this.props.pathname !== prevProps.pathname ||
       this.props.user !== prevProps.user ||
       this.props.password !== prevProps.password ||
-      this.props.autoRegister !== prevProps.autoRegister
+      this.props.autoRegister !== prevProps.autoRegister ||
+      this.props.incomingAudioDeviceId !== prevProps.incomingAudioDeviceId ||
+      this.props.outboundAudioDeviceId !== prevProps.outboundAudioDeviceId
     ) {
       this.reinitializeJsSIP();
     }
@@ -309,7 +317,16 @@ export default class SipProvider extends React.Component<
       this.ua = null;
     }
 
-    const { host, port, pathname, user, password, autoRegister } = this.props;
+    const {
+      host,
+      port,
+      pathname,
+      user,
+      password,
+      autoRegister,
+      incomingAudioDeviceId,
+      outboundAudioDeviceId,
+    } = this.props;
 
     if (!host || !port || !user) {
       this.setState({
@@ -318,6 +335,10 @@ export default class SipProvider extends React.Component<
         sipErrorMessage: null,
       });
       return;
+    }
+
+    if (incomingAudioDeviceId) {
+      this.remoteAudio.setSinkId(incomingAudioDeviceId);
     }
 
     try {
@@ -466,6 +487,13 @@ export default class SipProvider extends React.Component<
             return;
           }
 
+          if (this.state.rtcSession.connection) {
+            // Close senders, as these keep the microphone open according to browsers (and that keeps Bluetooth headphones from exiting headset mode)
+            this.state.rtcSession.connection.getSenders().forEach((sender) => {
+              sender.track.stop();
+            });
+          }
+
           this.setState({
             rtcSession: null,
             callStatus: CALL_STATUS_IDLE,
@@ -479,6 +507,13 @@ export default class SipProvider extends React.Component<
             return;
           }
 
+          if (this.state.rtcSession.connection) {
+            // Close senders, as these keep the microphone open according to browsers (and that keeps Bluetooth headphones from exiting headset mode)
+            this.state.rtcSession.connection.getSenders().forEach((sender) => {
+              sender.track.stop();
+            });
+          }
+
           this.setState({
             rtcSession: null,
             callStatus: CALL_STATUS_IDLE,
@@ -490,6 +525,34 @@ export default class SipProvider extends React.Component<
         rtcSession.on("accepted", () => {
           if (this.ua !== ua) {
             return;
+          }
+
+          // Set outbound device, if provided
+          if (outboundAudioDeviceId) {
+            // Get the appropriate device and set the new stream
+            const constraints = {
+              audio: {
+                deviceId: {
+                  exact: outboundAudioDeviceId,
+                },
+              },
+            };
+            navigator.mediaDevices
+              .getUserMedia(constraints)
+              .then((stream) => {
+                rtcSession.connection
+                  .getRemoteStreams()
+                  .forEach((remoteStream) => {
+                    rtcSession.connection.removeStream(remoteStream);
+                  });
+                rtcSession.connection.addStream(stream);
+              })
+              .catch((e) => {
+                this.logger.warn(
+                  "Warning: Invalid audio device passed. Caught error:",
+                );
+                this.logger.warn(e);
+              });
           }
 
           [

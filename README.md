@@ -41,6 +41,8 @@ ReactDOM.render(
       { urls: 'turn:example.com', username: 'foo', credential: '1234' }
     ]}
     debug={false} // whether to output events to console; false by default
+    incomingAudioDeviceId={"default"} // default, or a deviceId obtained from navigator.mediaDevices.enumerateDevices()
+    outboundAudioDeviceId={"default"} // default, or a deviceId obtained from navigator.mediaDevices.enumerateDevices()
   >
     <App />
   </SipProvider>
