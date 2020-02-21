@@ -38,6 +38,7 @@ export default class SipProvider extends React.Component<
     host: string;
     port: number;
     pathname: string;
+    secure: boolean;
     user: string;
     password: string;
     autoRegister: boolean;
@@ -73,6 +74,7 @@ export default class SipProvider extends React.Component<
     host: PropTypes.string,
     port: PropTypes.number,
     pathname: PropTypes.string,
+    secure: PropTypes.bool,
     user: PropTypes.string,
     password: PropTypes.string,
     autoRegister: PropTypes.bool,
@@ -90,6 +92,7 @@ export default class SipProvider extends React.Component<
     host: null,
     port: null,
     pathname: "",
+    secure: true,
     user: null,
     password: null,
     autoRegister: true,
@@ -172,6 +175,7 @@ export default class SipProvider extends React.Component<
       this.props.host !== prevProps.host ||
       this.props.port !== prevProps.port ||
       this.props.pathname !== prevProps.pathname ||
+      this.props.secure !== prevProps.secure ||
       this.props.user !== prevProps.user ||
       this.props.password !== prevProps.password ||
       this.props.autoRegister !== prevProps.autoRegister
@@ -309,7 +313,15 @@ export default class SipProvider extends React.Component<
       this.ua = null;
     }
 
-    const { host, port, pathname, user, password, autoRegister } = this.props;
+    const {
+      host,
+      port,
+      pathname,
+      secure,
+      user,
+      password,
+      autoRegister,
+    } = this.props;
 
     if (!host || !port || !user) {
       this.setState({
@@ -322,7 +334,7 @@ export default class SipProvider extends React.Component<
 
     try {
       const socket = new JsSIP.WebSocketInterface(
-        `wss://${host}:${port}${pathname}`,
+        `${secure ? "wss" : "ws"}://${host}:${port}${pathname}`,
       );
       this.ua = new JsSIP.UA({
         uri: `sip:${user}@${host}`,
